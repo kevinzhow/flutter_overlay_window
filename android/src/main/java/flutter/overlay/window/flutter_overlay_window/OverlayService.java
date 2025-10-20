@@ -157,12 +157,12 @@ public class OverlayService extends Service implements View.OnTouchListener {
             szWindow.set(w, h);
         }
         int dx = startX == OverlayConstants.DEFAULT_XY ? 0 : startX;
-        int dy = startY == OverlayConstants.DEFAULT_XY ? -statusBarHeightPx() : startY;
+        int dy = startY == OverlayConstants.DEFAULT_XY ? 0 : startY;
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                WindowSetup.width == -1999 ? -1 : WindowSetup.width,
-                WindowSetup.height != -1999 ? WindowSetup.height : screenHeight(),
+                WindowSetup.width == -1999 ? -1 : dpToPx(WindowSetup.width),
+                WindowSetup.height != -1999 ? dpToPx(WindowSetup.height) : screenHeight(),
                 0,
-                -statusBarHeightPx(),
+                0,
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE,
                 WindowSetup.flag | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
                         | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
@@ -174,6 +174,13 @@ public class OverlayService extends Service implements View.OnTouchListener {
             params.alpha = MAXIMUM_OPACITY_ALLOWED_FOR_S_AND_HIGHER;
         }
         params.gravity = WindowSetup.gravity;
+
+        flutterView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        );
+
         flutterView.setOnTouchListener(this);
         windowManager.addView(flutterView, params);
         moveOverlay(dx, dy, null);
@@ -186,38 +193,8 @@ public class OverlayService extends Service implements View.OnTouchListener {
         Display display = windowManager.getDefaultDisplay();
         DisplayMetrics dm = new DisplayMetrics();
         display.getRealMetrics(dm);
-        return inPortrait() ?
-                dm.heightPixels + statusBarHeightPx() + navigationBarHeightPx()
-                :
-                dm.heightPixels + statusBarHeightPx();
-    }
-
-    private int statusBarHeightPx() {
-        if (mStatusBarHeight == -1) {
-            int statusBarHeightId = mResources.getIdentifier("status_bar_height", "dimen", "android");
-
-            if (statusBarHeightId > 0) {
-                mStatusBarHeight = mResources.getDimensionPixelSize(statusBarHeightId);
-            } else {
-                mStatusBarHeight = dpToPx(DEFAULT_STATUS_BAR_HEIGHT_DP);
-            }
-        }
-
-        return mStatusBarHeight;
-    }
-
-    int navigationBarHeightPx() {
-        if (mNavigationBarHeight == -1) {
-            int navBarHeightId = mResources.getIdentifier("navigation_bar_height", "dimen", "android");
-
-            if (navBarHeightId > 0) {
-                mNavigationBarHeight = mResources.getDimensionPixelSize(navBarHeightId);
-            } else {
-                mNavigationBarHeight = dpToPx(DEFAULT_NAV_BAR_HEIGHT_DP);
-            }
-        }
-
-        return mNavigationBarHeight;
+        return
+                dm.heightPixels;
     }
 
 
