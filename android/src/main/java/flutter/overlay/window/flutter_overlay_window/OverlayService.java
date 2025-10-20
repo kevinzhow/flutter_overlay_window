@@ -159,8 +159,8 @@ public class OverlayService extends Service implements View.OnTouchListener {
         int dx = startX == OverlayConstants.DEFAULT_XY ? 0 : startX;
         int dy = startY == OverlayConstants.DEFAULT_XY ? 0 : startY;
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                WindowSetup.width == -1999 ? -1 : dpToPx(WindowSetup.width),
-                WindowSetup.height != -1999 ? dpToPx(WindowSetup.height) : screenHeight(),
+                WindowSetup.width == -1 ? screenWidth() : dpToPx(WindowSetup.width),
+                WindowSetup.height == -1 ? screenHeight() : dpToPx(WindowSetup.height),
                 0,
                 0,
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE,
@@ -197,6 +197,15 @@ public class OverlayService extends Service implements View.OnTouchListener {
                 dm.heightPixels;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
+    private int screenWidth() {
+        Display display = windowManager.getDefaultDisplay();
+        DisplayMetrics dm = new DisplayMetrics();
+        display.getRealMetrics(dm);
+        return
+                dm.widthPixels;
+    }
+
 
     private void updateOverlayFlag(MethodChannel.Result result, String flag) {
         if (windowManager != null) {
@@ -220,8 +229,10 @@ public class OverlayService extends Service implements View.OnTouchListener {
     private void resizeOverlay(int width, int height, boolean enableDrag, MethodChannel.Result result) {
         if (windowManager != null) {
             WindowManager.LayoutParams params = (WindowManager.LayoutParams) flutterView.getLayoutParams();
-            params.width = (width == -1999 || width == -1) ? -1 : dpToPx(width);
-            params.height = (height != 1999 || height != -1) ? dpToPx(height) : height;
+            params.width = (width == -1) ? screenWidth() : dpToPx(width);
+            params.height = (height == -1) ? screenWidth() : dpToPx(height);
+            params.x = dpToPx(0);
+            params.y = dpToPx(0);
             WindowSetup.enableDrag = enableDrag;
             windowManager.updateViewLayout(flutterView, params);
             result.success(true);
